@@ -83,6 +83,7 @@ void validacao_Nome_Usuario(){
     fclose(mestre);
 }
 
+
 void criarConta() {
     FILE* contada = fopen("BD/contador.txt", "w");
     FILE* mestre = fopen("BD/arquivoMestre.txt", "a+");
@@ -91,7 +92,7 @@ void criarConta() {
 
     validacao_Nome_Usuario();
 
-    validacao_Email(email);
+    validacao_Email();
 
     printf("Digite a senha: ");
     scanf("%s", senha);
@@ -138,6 +139,7 @@ void fazer_Login(){
     }
 }
 
+
 int Ler_Opcoes(){
     int opcao;
     scanf("%d", &opcao);
@@ -151,7 +153,6 @@ void opcoes_Menu_Biblioteca(){
     printf("3. Realizar devolucao\n");
     printf("4. Consultar emprestimos\n");
     printf("5. Conta\n");
-    printf("6. Sair\n");
 }
 
 void opcoes_Menu_Biblioteca_Adm(){
@@ -161,16 +162,13 @@ void opcoes_Menu_Biblioteca_Adm(){
 }
 
 int menu_Principal(){
-    limpar_Tela();
-
     int opcao;
-
+    limpar_Tela();
     printf("====Biblioteca Virtual====\n");
     printf("1. Fazer login\n");
     printf("2. Fazer cadastro\n");
     printf("0. Sair\n");
     opcao = Ler_Opcoes();
-
     switch (opcao) {
     case 1:
         limpar_Tela();
@@ -179,6 +177,8 @@ int menu_Principal(){
     case 2:
         limpar_Tela();
         criarConta();
+        limpar_Tela();
+        printf("O usuario foi criado com sucesso!");
         menu_Principal();
         break;
     case 0:
@@ -188,8 +188,7 @@ int menu_Principal(){
 
     default:
         limpar_Tela();
-        printf("Opcao inexistente!!");
-        continuar();
+        printf("Opcao invalida");
         menu_Principal();
         break;
     }
@@ -219,21 +218,26 @@ void emprestimo(int id)
 
     //Mostra o catálogo para o usuario
     printf("Livros disponíveis:\n\n");
-    while(fscanf(arq,"%[^|] %c %[^|] %c %[^|] %c %d %c %d", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.quantidade) != EOF)
+    while(fscanf(arq," %[^|] %c %[^|] %c %[^|] %c %d %c %d", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.quantidade) != EOF)
     {
-        printf("%s| %s| %s| Ano de lançamento: %d | Quantidade Disponível: %d | (%d)", livro.titulo, livro.autor, livro.genero, livro.ano, livro.quantidade, linha);
+        printf("%d. %s| %s| %s| Ano de lançamento: %d | Quantidade Disponível: %d\n",linha , livro.titulo, livro.autor, livro.genero, livro.ano, livro.quantidade);
         linha++;
     }
     rewind(arq);
     int contador = 1;
     linha--;
 
-    printf("\n\nDigite a opção do livro que você quer emprestar\n");
+    printf("\nDigite a opção do livro que você quer emprestar\n");
     scanf("%d", &sel);
 
     //Menu pra escolha de livro do usuario e Salva a nova quantidade de livros disponível
     while(fscanf(arq,"%[^|] %c %[^|] %c %[^|] %c %d %c %d", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.quantidade) != EOF)
     {
+        if(sel == contador && livro.quantidade == 0){
+            printf("\nLivro indisponível");
+            while ((lixo = getchar()) != '\n' && lixo != EOF);
+            getchar();
+        }
         if(sel == contador && livro.quantidade > 0){
             livro.quantidade--;
             //Calcula o tempo daqui 1 semana e retorna para o usuario como data de devolução
@@ -250,9 +254,6 @@ void emprestimo(int id)
             reg = fopen(nomeArquivo,"a");
             fprintf(reg,"%s| %s| %s| %d | Data de devolução: %s", livro.titulo, livro.autor, livro.genero, livro.ano, tempofuturo);
             fclose(reg);
-        }
-        if(sel == contador && livro.quantidade == 0){
-            printf("\nLivro indisponível");
         }
 
        //Reescreve o catálogo com a alteração de quantidade em um arquivo temporario
@@ -286,16 +287,16 @@ void consultarCatalogo(int id)
     Catalogo livro;
     FILE *arq = fopen("BD/catalogo.txt","r");
 
-    printf("Livros disponíveis:\n");
-    while(fscanf(arq,"%[^|] %c %[^|] %c %[^|] %c %d %c %d", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.quantidade) != EOF)
+    printf("Livros disponíveis:\n\n");
+    while(fscanf(arq," %[^|] %c %[^|] %c %[^|] %c %d %c %d", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.quantidade) != EOF)
     {
-        printf("%s| %s| %s| Ano de lançamento: %d | Quantidade Disponível: %d | (%d)", livro.titulo, livro.autor, livro.genero, livro.ano, livro.quantidade, linha);
+        printf("%d. %s| %s| %s| Ano de lançamento: %d | Quantidade Disponível: %d\n", linha, livro.titulo, livro.autor, livro.genero, livro.ano, livro.quantidade);
         linha++;
     }
 
     fclose(arq);
 
-    printf("\n\nPressione qualquer tecla para continuar\n");
+    printf("\nPressione qualquer tecla para continuar\n");
     while ((lixo = getchar()) != '\n' && lixo != EOF);
     getchar();
     limpar_Tela();
@@ -329,17 +330,17 @@ void devolução(int id)
         FILE *temp = fopen("BD/usuarios/temp2.txt","w");
 
         rewind(reg);
-        printf("Livro(s) Emprestado(s):\n");
-        while(fscanf(reg,"%[^|] %c %[^|] %c %[^|] %c %d %c %[^\n]", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, livro.data) != EOF)
+        printf("Livro(s) Emprestado(s):\n\n");
+        while(fscanf(reg," %[^|] %c %[^|] %c %[^|] %c %d %c %[^\n]", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, livro.data) != EOF)
         {
-        printf("%s| %s| %s| Ano de lançamento: %d | %s | (%d)", livro.titulo, livro.autor, livro.genero, livro.ano, livro.data, linha);
+        printf("%d. %s| %s| %s| Ano de lançamento: %d | %s\n", linha, livro.titulo, livro.autor, livro.genero, livro.ano, livro.data);
         linha++;
         }
 
     rewind(reg);
     int contador = 1;
     linha--;
-    printf("\n\nDigite a opção do livro que você quer devolver\n");
+    printf("\nDigite a opção do livro que você quer devolver\n");
     scanf("%d", &sel);
 
     while(fscanf(reg,"%[^|] %c %[^|] %c %[^|] %c %d %c %[^\n]", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, livro.data) != EOF)
@@ -382,80 +383,74 @@ void devolução(int id)
     menu_Biblioteca(id);
 }
 
-void apagarregistro(int id) {
-    if (id >= 0) {
-        printf("Opcao inexistente!!");
-        continuar();
-        menu_Biblioteca(id);
-    } else {
-        char lixo;
-        int sel = 0;
-        int linha = 1;
-        Catalogo livro;
-        FILE *arq = fopen("catalogo.txt","r");
-        FILE *fp = fopen("temp.txt","w");
 
-        printf("Livros no catálogo:\n\n");
-        while(fscanf(arq,"%[^|] %c %[^|] %c %[^|] %c %d %c %d", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.quantidade) != EOF)
-        {
-            printf("%s| %s| %s| Ano de lançamento: %d | Quantidade Disponível: %d | (%d)", livro.titulo, livro.autor, livro.genero, livro.ano, livro.quantidade, linha);
-            linha++;
-        }
+void apagarRegistro()
+{
+    limpar_Tela();
+    char lixo;
+    int sel = 0;
+    int linha = 1;
+    Catalogo livro;
+    FILE *arq = fopen("catalogo.txt","r");
+    FILE *fp = fopen("temp.txt","w");
 
-        rewind(arq);
-        int contador = 1;
-        linha--;
-        printf("\n\nDigite a opção do livro que você quer apagar:\n");
-        scanf("%d", &sel);
-
-        while(fscanf(arq,"%[^|] %c %[^|] %c %[^|] %c %d %c %d", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.quantidade) != EOF)
-        {
-            if(sel != contador){
-                fprintf(fp,"%s|%s|%s|%d|%d", livro.titulo, livro.autor, livro.genero, livro.ano, livro.quantidade);
-            }
-            contador++;
-        }
-
-        fclose(arq);
-        fclose(fp);
-
-        //Transforma o arquivo temporario com a alteração no novo catálogo e apaga o antigo arquivo
-        remove("catalogo.txt");
-        rename("temp.txt", "catalogo.txt");
+    printf("Livros no catálogo:\n\n");
+    while(fscanf(arq,"%[^|] %c %[^|] %c %[^|] %c %d %c %d", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.quantidade) != EOF)
+    {
+        printf("%s| %s| %s| Ano de lançamento: %d | Quantidade Disponível: %d | (%d)", livro.titulo, livro.autor, livro.genero, livro.ano, livro.quantidade, linha);
+        linha++;
     }
+
+
+    rewind(arq);
+    int contador = 1;
+    linha--;
+    printf("\n\nDigite a opção do livro que você quer apagar:\n");
+    scanf("%d", &sel);
+
+    while(fscanf(arq,"%[^|] %c %[^|] %c %[^|] %c %d %c %d", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.quantidade) != EOF)
+    {
+        if(sel != contador){
+            fprintf(fp,"%s|%s|%s|%d|%d", livro.titulo, livro.autor, livro.genero, livro.ano, livro.quantidade);
+        }
+        contador++;
+    }
+
+    fclose(arq);
+    fclose(fp);
+
+    //Transforma o arquivo temporario com a alteração no novo catálogo e apaga o antigo arquivo
+    remove("catalogo.txt");
+    rename("temp.txt", "catalogo.txt");
 }
 
-void registrarLivro(int id) {
-    if (id >= 0) {
-        printf("Opcao inexistente!!");
-        continuar();
-        menu_Biblioteca(id);
-    } else {
-        FILE *fp = fopen("BD/catalogo.txt", "a"); // Abrir o arquivo para leitura
+void registrarLivro()
+{
+    limpar_Tela();
+    FILE *fp = fopen("BD/catalogo.txt", "a"); // Abrir o arquivo para leitura
 
-        typedef struct
-        {
-            char titulo[100], autor[100], genero[100];
-            int ano, quantidade;
-        } catalogo;
-        catalogo livro;
+    typedef struct
+    {
+        char titulo[100], autor[100], genero[100];
+        int ano, quantidade;
+    } catalogo;
+    catalogo livro;
 
-        printf("Informe os dados do livro para o catálogo:\n");
-        printf("Título: ");
-        scanf(" %[^\n]", livro.titulo);
-        printf("Autor: ");
-        scanf(" %[^\n]", livro.autor);
-        printf("Gênero: ");
-        scanf(" %[^\n]", livro.genero);
-        printf("Ano de lançamento: ");
-        scanf("%d", &livro.ano);
-        printf("Quantidade disponível: ");
-        scanf("%d", &livro.quantidade);
+    printf("Informe os dados do livro para o catálogo:\n");
+    printf("Título: ");
+    scanf(" %[^\n]", livro.titulo);
+    printf("Autor: ");
+    scanf(" %[^\n]", livro.autor);
+    printf("Gênero: ");
+    scanf(" %[^\n]", livro.genero);
+    printf("Ano de lançamento: ");
+    scanf("%d", &livro.ano);
+    printf("Quantidade disponível: ");
+    scanf("%d", &livro.quantidade);
 
-        fprintf(fp, "\n%s | %s | %s | %d | %d", livro.titulo, livro.autor, livro.genero, livro.ano, livro.quantidade);
+    fprintf(fp, "\n%s | %s | %s | %d | %d", livro.titulo, livro.autor, livro.genero, livro.ano, livro.quantidade);
 
-        fclose(fp);
-    }
+    fclose(fp);
 }
 
 void consultarEmprestimo(int id)
@@ -480,16 +475,16 @@ void consultarEmprestimo(int id)
         }
     else{
     rewind(arq);
-    printf("Livros emprestados:\n");
-    while(fscanf(arq,"%[^|] %c %[^|] %c %[^|] %c %d %c %[^\n]", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.data) != EOF)
+    printf("Livros emprestados:\n\n");
+    while(fscanf(arq," %[^|] %c %[^|] %c %[^|] %c %d %c %[^\n]", livro.titulo, &lixo, livro.autor, &lixo, livro.genero, &lixo, &livro.ano, &lixo, &livro.data) != EOF)
     {
-        printf("%s| %s| %s| Ano de lançamento: %d | %s| (%d)", livro.titulo, livro.autor, livro.genero, livro.ano, livro.data, linha);
+        printf("%d. %s| %s| %s| Ano de lançamento: %d | %s\n", linha, livro.titulo, livro.autor, livro.genero, livro.ano, livro.data);
         linha++;
     }
 
     fclose(arq);
 
-    printf("\n\nPressione qualquer tecla para continuar\n");
+    printf("\nPressione qualquer tecla para continuar\n");
     while ((lixo = getchar()) != '\n' && lixo != EOF);
     getchar();
     limpar_Tela();
@@ -538,10 +533,10 @@ void atualizar_Dados_Cadastrais(){
                     fprintf(mestreTemp, "%d %d %s %s %s\n", statusUsuario, idTemp, nomeUsuario, senha, email);
                 }
             }
-            
+
             fclose(mestre);
             fclose(mestreTemp);
-            
+
             if (remove("BD/arquivoMestre.txt") == 0 && rename("BD/mestreTemp.txt", "BD/arquivoMestre.txt") == 0) {
                 printf("O usuario foi atualizado com sucesso!");
                 continuar();
@@ -616,7 +611,7 @@ void adm_Excluir_Usuarios(int id){
 
         char nomeArquivoUsuarioExcluir[20], nomeTemp[100], senhaTemp[50], emailTemp[100];
         int autorizacao, idTemp, statusUsuario, idExcluir;
-        
+
         printf("Digite o id do usuario em que voce deseja excluir: ");
         scanf("%d", &idExcluir);
 
@@ -742,7 +737,7 @@ void adm_Criar_Comta(int id){
         if (numeroId > 0){
             numeroId++;
         }
-        
+
         fprintf(contada, "%d", numeroId);
 
         fclose(contada);
@@ -770,7 +765,7 @@ void opcoes_Menu_Conta_Adm(){
 void menu_Conta(){
     limpar_Tela();
     int opcao;
-    
+
     if (idUsuarioLogado < 0) {
         opcoes_Menu_Conta_Adm();
         opcao = Ler_Opcoes();
@@ -778,7 +773,7 @@ void menu_Conta(){
         opcoes_Menu_Conta();
         opcao = Ler_Opcoes();
     }
-    
+
     switch (opcao){
     case 1:
         atualizar_Dados_Cadastrais();
@@ -801,7 +796,7 @@ void menu_Conta(){
     case 6824:
         adm_Criar_Comta(idUsuarioLogado);
         break;
-    
+
     default:
         printf("Opcao inexistente!!");
         continuar();
@@ -814,7 +809,7 @@ void menu_Biblioteca(int id){
     limpar_Tela();
 
     int opcao;
-    if (id < 0) {
+    if (id == -99) {
         opcoes_Menu_Biblioteca_Adm();
         opcao = Ler_Opcoes();
     } else {
@@ -838,26 +833,21 @@ void menu_Biblioteca(int id){
     case 5:
         menu_Conta(id);
         break;
-    case 6:
-        limpar_Tela();
-        encerrar_Codigo();
-        break;
     case 1113:
-        registrarLivro(id);
+        registrarLivro();
         break;
     case 1114:
-        apagarregistro(id);
+        apagarRegistro();
         break;
 
     default:
-        printf("Opcao inexistente!!");
-        continuar();
-        menu_Biblioteca(id);
         break;
     }
 }
 
-int main(){
+
+int main()
+{
     FILE* contagem = fopen("BD/contador.txt", "r");
     int ultimoId;
 
@@ -869,6 +859,9 @@ int main(){
     } else {
         fscanf(contagem, "%d", &numeroId);
         fclose(contagem);
+
+        strcpy(nomeUsuario, "nike");
+        strcpy(senha, "123");
 
         menu_Principal();
     }
